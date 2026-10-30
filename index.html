@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>給食もぐもぐフクロウタイマー</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* 超・落ち着いたリアルなフクロウのアニメーション定義 */
+        
+        /* 全体のゆったりした息づかい */
+        @keyframes gentle-breath {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-2px) scale(1.003, 0.997); }
+        }
+
+        /* 非常にゆっくり味わうもぐもぐ動作 (周期を大幅に長く設定) */
+        @keyframes gentle-chew {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            20% { transform: translateY(1px) rotate(-0.5deg); }
+            40% { transform: translateY(-0.3px) rotate(0.5deg); }
+            60% { transform: translateY(0.8px) rotate(-0.3deg); }
+            80% { transform: translateY(0px) rotate(0.3deg); }
+        }
+
+        /* くちばしのモグモグ（ゆったり） */
+        @keyframes beak-chew {
+            0%, 100% { transform: scaleY(1); }
+            30% { transform: scaleY(0.9) translateY(0.8px); }
+            60% { transform: scaleY(0.96); }
+            85% { transform: scaleY(0.88) translateY(1px); }
+        }
+
+        /* とてもゆったりとした首傾げ */
+        @keyframes head-tilt {
+            0%, 100% { transform: rotate(0deg); }
+            30% { transform: rotate(-2deg); }
+            70% { transform: rotate(2deg); }
+        }
+
+        /* 翼のわずかな動き */
+        @keyframes wing-subtle-l {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-1deg) translateY(-0.5px); }
+        }
+        @keyframes wing-subtle-r {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(1deg) translateY(-0.5px); }
+        }
+
+        /* リアルな二重のまばたき */
+        @keyframes natural-blink {
+            0%, 94%, 97%, 100% { transform: scaleY(1); }
+            95.5%, 98.5% { transform: scaleY(0.05); }
+        }
+
+        /* 湯気（ゆっくり立ち上る） */
+        @keyframes slow-steam {
+            0% { opacity: 0; transform: translateY(0) scale(0.7); }
+            40% { opacity: 0.5; }
+            100% { opacity: 0; transform: translateY(-25px) scale(1.2); }
+        }
+
+        /* 焦り汗のアニメーション */
+        @keyframes sweat-drop {
+            0%, 100% { transform: translateY(0) scale(0.8); opacity: 0; }
+            30% { transform: translateY(3px) scale(1.1); opacity: 0.9; }
+            80% { transform: translateY(10px) scale(0.9); opacity: 0.2; }
+        }
+
+        /* アニメーションクラス適用（時間を長めに設定してゆっくりに） */
+        .owl-group {
+            animation: gentle-breath 6s infinite ease-in-out;
+        }
+
+        .owl-head {
+            animation: head-tilt 16s infinite ease-in-out;
+            transform-origin: 150px 140px;
+        }
+
+        .owl-eye-lid {
+            animation: natural-blink 8s infinite;
+            transform-origin: 150px 105px;
+        }
+
+        /* 通常時のゆったりもぐもぐ（タイマー動作時） */
+        .eating .owl-head {
+            animation: head-tilt 16s infinite ease-in-out, gentle-chew 5s infinite ease-in-out;
+        }
+        .eating .owl-beak {
+            animation: beak-chew 2.5s infinite ease-in-out;
+            transform-origin: 150px 125px;
+        }
+        .eating .owl-wing-left {
+            animation: wing-subtle-l 7s infinite ease-in-out;
+            transform-origin: 90px 140px;
+        }
+        .eating .owl-wing-right {
+            animation: wing-subtle-r 7s infinite ease-in-out;
+            transform-origin: 210px 140px;
+        }
+
+        /* 残り5分以下：急いで食べるアニメーション（スピードアップ） */
+        .eating-hurry .owl-head {
+            animation: head-tilt 6s infinite ease-in-out, gentle-chew 1.8s infinite ease-in-out;
+        }
+        .eating-hurry .owl-beak {
+            animation: beak-chew 0.9s infinite ease-in-out;
+            transform-origin: 150px 125px;
+        }
+        .eating-hurry .owl-wing-left {
+            animation: wing-subtle-l 3s infinite ease-in-out;
+            transform-origin: 90px 140px;
+        }
+        .eating-hurry .owl-wing-right {
+            animation: wing-subtle-r 3s infinite ease-in-out;
+            transform-origin: 210px 140px;
+        }
+
+        /* 急いでいる時の汗アニメーション */
+        .sweat-mark-1 { animation: sweat-drop 1.2s infinite ease-in 0s; }
+        .sweat-mark-2 { animation: sweat-drop 1.2s infinite ease-in 0.6s; }
+
+        /* ごちそうさまポーズ用の手（羽）のスタイル */
+        .thanks-wings .owl-wing-left {
+            transform: rotate(45deg) translate(25px, -15px) !important;
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .thanks-wings .owl-wing-right {
+            transform: rotate(-45deg) translate(-25px, -15px) !important;
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* 湯気アニメーション */
+        .steam-1 { animation: slow-steam 4s infinite ease-out 0s; }
+        .steam-2 { animation: slow-steam 4s infinite ease-out 1.6s; }
+        .steam-3 { animation: slow-steam 4s infinite ease-out 2.8s; }
+
+        /* ボタン影・質感 */
+        .btn-bounce {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-bounce:active {
+            transform: translateY(2px);
+            box-shadow: none !important;
+        }
+
+        /* 円形プログレスバーの移行効果 */
+        #progressRingCircle {
+            transition: stroke-dashoffset 0.8s linear, stroke 0.5s ease;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-gray-800 p-3 md:p-6">
+
+    <!-- ヘッダーエリア -->
+    <header class="max-w-4xl w-full mx-auto flex justify-between items-center bg-white/80 backdrop-blur-md rounded-2xl p-3 md:p-4 shadow-sm border border-emerald-100/80">
+        <div class="flex items-center gap-3">
+            <span class="text-3xl">🦉</span>
+            <div>
+                <h1 class="text-lg md:text-2xl font-black text-emerald-900 tracking-wide">きゅうしょく もぐもぐ タイマー</h1>
+                <p class="text-xs text-emerald-600 hidden sm:block">フクちゃんと いっしょに ゆっくり おいしく たべよう</p>
+            </div>
+        </div>
+        <button id="soundToggleBtn" class="flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold px-4 py-2 rounded-xl transition border border-emerald-200/60 shadow-sm">
+            <i id="soundIcon" class="fa-solid fa-volume-high text-lg"></i>
+            <span id="soundText" class="hidden sm:inline text-sm">おと: オン</span>
+        </button>
+    </header>
+
+    <!-- メインコンテンツエリア -->
+    <main class="max-w-4xl w-full mx-auto my-auto flex flex-col items-center justify-center gap-4 py-2">
+
+        <!-- メッセージバナー -->
+        <div id="statusBadge" class="bg-amber-50/90 border-2 border-amber-300/80 text-amber-900 font-bold text-base md:text-xl px-6 py-2 rounded-full shadow-sm text-center transition-all duration-300">
+            よく かんで おいしく たべようね！
+        </div>
+
+        <!-- フクロウと円形時計タイマーの結合コンテナ -->
+        <div class="relative w-72 h-72 sm:w-96 sm:h-96 md:w-[420px] md:h-[420px] flex items-center justify-center">
+            
+            <!-- ごちそうさまでした 吹き出し -->
+            <div id="speechBubble" class="absolute -top-4 sm:-top-6 z-30 opacity-0 transition-all duration-500 transform scale-75 pointer-events-none">
+                <div class="relative bg-white border-4 border-amber-400 text-amber-900 font-black text-xl sm:text-2xl px-6 py-3 rounded-3xl shadow-xl flex items-center gap-2">
+                    <span>🙏 ごちそうさまでした！</span>
+                    <!-- 吹き出しのしっぽ -->
+                    <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[12px] border-t-amber-400"></div>
+                    <div class="absolute -bottom-[7px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-white"></div>
+                </div>
+            </div>
+
+            <!-- 1. バックグラウンド 円形時計プログレスバー (SVG) -->
+            <svg class="absolute inset-0 w-full h-full -rotate-90 drop-shadow-md" viewBox="0 0 320 320">
+                <!-- 背景リング（時計の外枠・目盛りトラック） -->
+                <circle cx="160" cy="160" r="142" fill="none" stroke="#e2e8f0" stroke-width="14" />
+                <circle cx="160" cy="160" r="150" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4 8" />
+                
+                <!-- 時間とともに減っていくアニメーションリング -->
+                <circle id="progressRingCircle" cx="160" cy="160" r="142" fill="none" 
+                        stroke="#10b981" stroke-width="14" stroke-linecap="round"
+                        stroke-dasharray="892.2" stroke-dashoffset="0" />
+            </svg>
+
+            <!-- 2. 中央のフクロウと給食イラスト (SVG) -->
+            <div id="owlContainer" class="relative w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 flex items-center justify-center z-10">
+                
+                <!-- 湯気エフェクト（温かいご飯・お味噌汁用） -->
+                <div id="steamGroup" class="absolute top-12 left-16 z-20 opacity-0 transition-opacity duration-500">
+                    <div class="absolute w-3 h-3 bg-white/70 rounded-full steam-1 -left-1"></div>
+                    <div class="absolute w-4 h-4 bg-white/70 rounded-full steam-2 left-3"></div>
+                    <div class="absolute w-3 h-3 bg-white/70 rounded-full steam-3 left-7"></div>
+                </div>
+
+                <svg class="w-full h-full drop-shadow-lg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <!-- グラデーション定義（リアルな質感） -->
+                        <linearGradient id="owlFeather" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#8B4513" />
+                            <stop offset="50%" stop-color="#6A2E05" />
+                            <stop offset="100%" stop-color="#4A1E02" />
+                        </linearGradient>
+
+                        <linearGradient id="owlBelly" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#FFF8DC" />
+                            <stop offset="100%" stop-color="#F5DEB3" />
+                        </linearGradient>
+
+                        <radialGradient id="owlEye" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#FCD34D" />
+                            <stop offset="70%" stop-color="#F59E0B" />
+                            <stop offset="100%" stop-color="#B45309" />
+                        </radialGradient>
+
+                        <linearGradient id="woodTable" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#B45309" />
+                            <stop offset="100%" stop-color="#78350F" />
+                        </linearGradient>
+
+                        <linearGradient id="misoSoup" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#D97706" />
+                            <stop offset="100%" stop-color="#92400E" />
+                        </linearGradient>
+                    </defs>
+
+                    <!-- 木のテーブル -->
+                    <rect x="20" y="242" width="260" height="30" rx="6" fill="url(#woodTable)" />
+                    <line x1="20" y1="246" x2="280" y2="246" stroke="#D97706" stroke-width="2" opacity="0.4" />
+
+                    <!-- フクロウ全体グループ -->
+                    <g class="owl-group">
+                        <!-- 足 -->
+                        <path d="M 122 240 L 115 248 M 125 240 L 125 250 M 128 240 L 133 248" stroke="#D97706" stroke-width="4" stroke-linecap="round" />
+                        <path d="M 172 240 L 167 248 M 175 240 L 175 250 M 178 240 L 183 248" stroke="#D97706" stroke-width="4" stroke-linecap="round" />
+
+                        <!-- 体ベース -->
+                        <ellipse cx="150" cy="165" rx="72" ry="82" fill="url(#owlFeather)" />
+                        <!-- お腹（羽模様） -->
+                        <ellipse cx="150" cy="178" rx="52" ry="62" fill="url(#owlBelly)" />
+                        
+                        <!-- お腹の羽毛羽の細かい柄 -->
+                        <g stroke="#92400E" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.75">
+                            <path d="M 132 145 Q 141 153 150 145 M 150 145 Q 159 153 168 145" />
+                            <path d="M 122 165 Q 136 176 150 165 M 150 165 Q 164 176 178 165" />
+                            <path d="M 128 188 Q 139 197 150 188 M 150 188 Q 161 197 172 188" />
+                            <path d="M 136 210 Q 143 217 150 210 M 150 210 Q 157 217 164 210" />
+                        </g>
+
+                        <!-- 左羽（重ね加工） -->
+                        <path class="owl-wing-left" d="M 80 130 C 58 150 52 195 82 210 C 90 180 88 150 80 130 Z" fill="#6A2E05" stroke="#4A1E02" stroke-width="1.5" />
+                        <!-- 右羽 -->
+                        <path class="owl-wing-right" d="M 220 130 C 242 150 248 195 218 210 C 210 180 212 150 220 130 Z" fill="#6A2E05" stroke="#4A1E02" stroke-width="1.5" />
+
+                        <!-- 頭部グループ (首振りアニメーションの対象) -->
+                        <g class="owl-head">
+                            <!-- 羽角 / 耳毛 -->
+                            <path d="M 92 88 L 68 45 L 112 68 Z" fill="#4A1E02" />
+                            <path d="M 208 88 L 232 45 L 188 68 Z" fill="#4A1E02" />
+                            <path d="M 96 85 L 77 52 L 112 68 Z" fill="#8B4513" />
+                            <path d="M 204 85 L 223 52 L 188 68 Z" fill="#8B4513" />
+
+                            <!-- 頭部ベース -->
+                            <circle cx="150" cy="110" r="62" fill="url(#owlFeather)" />
+
+                            <!-- 顔の白いハート型の枠（フクロウの特徴） -->
+                            <path d="M 150 82 C 120 60 90 85 92 118 C 94 142 125 152 150 152 C 175 152 206 142 208 118 C 210 85 180 60 150 82 Z" fill="#FFFBEB" opacity="0.95" />
+
+                            <!-- 目の周りの茶色リング -->
+                            <circle cx="120" cy="108" r="26" fill="#FEF3C7" stroke="#D97706" stroke-width="2" />
+                            <circle cx="180" cy="108" r="26" fill="#FEF3C7" stroke="#D97706" stroke-width="2" />
+
+                            <!-- 瞳（虹彩＋黒目） -->
+                            <g class="owl-eye-lid">
+                                <!-- 虹彩 -->
+                                <circle class="normal-eye" cx="122" cy="108" r="18" fill="url(#owlEye)" />
+                                <circle class="normal-eye" cx="178" cy="108" r="18" fill="url(#owlEye)" />
+                                <!-- 瞳孔 (深みのある黒) -->
+                                <circle class="normal-eye" cx="123" cy="108" r="11" fill="#0F172A" />
+                                <circle class="normal-eye" cx="177" cy="108" r="11" fill="#0F172A" />
+                                <!-- 瞳の光・ハイライト -->
+                                <circle class="normal-eye" cx="118" cy="103" r="4" fill="#FFFFFF" />
+                                <circle class="normal-eye" cx="125" cy="113" r="2" fill="#FFFFFF" opacity="0.8" />
+                                <circle class="normal-eye" cx="172" cy="103" r="4" fill="#FFFFFF" />
+                                <circle class="normal-eye" cx="179" cy="113" r="2" fill="#FFFFFF" opacity="0.8" />
+                            </g>
+
+                            <!-- ごちそうさま（目を瞑るニコニコ目） (初期状態は非表示) -->
+                            <g id="thanksEyes" class="opacity-0 transition-opacity duration-300">
+                                <path d="M 106 110 Q 120 96 134 110" stroke="#4A1E02" stroke-width="4.5" stroke-linecap="round" fill="none" />
+                                <path d="M 166 110 Q 180 96 194 110" stroke="#4A1E02" stroke-width="4.5" stroke-linecap="round" fill="none" />
+                            </g>
+
+                            <!-- 急いでいる時の怒り・焦り目元パーツ (通常は非表示) -->
+                            <g id="angryBrows" class="opacity-0 transition-opacity duration-300">
+                                <!-- キリッとした眉・目つきブレード -->
+                                <path d="M 98 90 L 138 102 L 136 94 Z" fill="#4A1E02" />
+                                <path d="M 202 90 L 162 102 L 164 94 Z" fill="#4A1E02" />
+                            </g>
+
+                            <!-- 焦り汗マーク (💦) (残り5分時に表示) -->
+                            <g id="sweatMarks" class="opacity-0 transition-opacity duration-300">
+                                <path class="sweat-mark-1" d="M 82 92 Q 78 85 82 80 C 87 85 86 92 82 92 Z" fill="#38BDF8" />
+                                <path class="sweat-mark-2" d="M 218 92 Q 214 85 218 80 C 223 85 222 92 218 92 Z" fill="#38BDF8" />
+                            </g>
+
+                            <!-- くちばし -->
+                            <path class="owl-beak" d="M 143 114 C 143 114 150 110 157 114 C 160 125 155 138 150 140 C 145 138 140 125 143 114 Z" fill="#D97706" stroke="#92400E" stroke-width="1.5" />
+
+                            <!-- ほんのり優しいほっぺ -->
+                            <circle cx="102" cy="126" r="8" fill="#FCA5A5" opacity="0.4" />
+                            <circle cx="198" cy="126" r="8" fill="#FCA5A5" opacity="0.4" />
+                        </g>
+                    </g>
+                    <!-- 給食セット (手前：時間経過に合わせて動的に変化) -->
+                    <g id="lunchSet">
+                        <!-- トレイ（木目のお盆） -->
+                        <rect x="35" y="228" width="230" height="18" rx="6" fill="#FDE68A" stroke="#D97706" stroke-width="2" />
+                        <rect x="40" y="230" width="220" height="12" rx="4" fill="#FEF3C7" />
+
+                        <!-- 1. ご飯のお茶碗 (左側) -->
+                        <g id="riceBowlGroup">
+                            <!-- 白ご飯（時間経過で縮小） -->
+                            <g id="riceAmount">
+                                <ellipse cx="80" cy="225" rx="19" ry="12" fill="#FFFFFF" />
+                                <ellipse cx="80" cy="222" rx="16" ry="9" fill="#F8FAFC" />
+                                <!-- つぶつぶ質感 -->
+                                <circle cx="74" cy="221" r="1.5" fill="#E2E8F0" />
+                                <circle cx="82" cy="218" r="1.5" fill="#E2E8F0" />
+                                <circle cx="87" cy="222" r="1.5" fill="#E2E8F0" />
+                            </g>
+                            <!-- 茶碗 -->
+                            <path d="M 60 225 C 60 242 100 242 100 225 Z" fill="#3B82F6" stroke="#1D4ED8" stroke-width="1.5" />
+                            <ellipse cx="80" cy="225" rx="20" ry="4" fill="none" stroke="#1D4ED8" stroke-width="1.5" />
+                        </g>
+
+                        <!-- 2. お味噌汁 (右側前) -->
+                        <g id="soupBowlGroup">
+                            <!-- お椀 -->
+                            <path d="M 190 227 C 190 243 226 243 226 227 Z" fill="#78350F" stroke="#451A03" stroke-width="1.5" />
+                            <ellipse cx="208" cy="227" rx="18" ry="4" fill="#451A03" />
+                            <!-- 味噌汁の液面・具材（時間で減少） -->
+                            <g id="misoAmount">
+                                <ellipse id="misoSurface" cx="208" cy="227" rx="16" ry="3" fill="url(#misoSoup)" />
+                                <!-- 具（豆腐・わかめ） -->
+                                <rect id="tofu1" x="202" y="225" width="4" height="3" rx="0.5" fill="#FFFFFF" />
+                                <rect id="tofu2" x="210" y="226" width="3" height="3" rx="0.5" fill="#FFFFFF" />
+                                <path id="wakame" d="M 198 226 Q 200 228 202 226" stroke="#15803D" stroke-width="2" fill="none" />
+                            </g>
+                        </g>
+
+                        <!-- 3. 2つの部屋のある平皿 (中央) -->
+                        <g id="plateGroup">
+                            <!-- 平皿ベース (2つの仕切り部屋) -->
+                            <path d="M 112 226 C 112 238 178 238 178 226 Z" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" />
+                            <ellipse cx="145" cy="226" rx="33" ry="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1" />
+                            <!-- 真ん中の仕切り壁 -->
+                            <line x1="145" y1="222" x2="145" y2="231" stroke="#CBD5E1" stroke-width="2" />
+
+                            <!-- 左部屋：お肉（ハンバーグ/唐揚げ風） -->
+                            <g id="meatAmount">
+                                <ellipse cx="130" cy="224" rx="10" ry="5" fill="#78350F" />
+                                <ellipse cx="129" cy="223" rx="8" ry="3.5" fill="#B45309" />
+                                <!-- タレのツヤ -->
+                                <ellipse cx="127" cy="222" rx="3" ry="1" fill="#FEF3C7" opacity="0.6" />
+                            </g>
+
+                            <!-- 右部屋：お野菜（ブロッコリー・サラダ） -->
+                            <g id="vegAmount">
+                                <!-- ブロッコリー/サラダ -->
+                                <circle cx="158" cy="222" r="4.5" fill="#15803D" />
+                                <circle cx="163" cy="223" r="4" fill="#22C55E" />
+                                <circle cx="155" cy="224" r="3.5" fill="#166534" />
+                                <!-- ミニトマト -->
+                                <circle cx="160" cy="225" r="3" fill="#EF4444" />
+                            </g>
+                        </g>
+
+                        <!-- 4. 牛のマーク入り牛乳パック (右側奥) -->
+                        <g id="milkPackGroup">
+                            <!-- パック本体 -->
+                            <path d="M 232 230 L 252 230 L 249 198 L 235 198 Z" fill="#FFFFFF" stroke="#0284C7" stroke-width="1" />
+                            <!-- 中身レベル（青色の模様高さで表現） -->
+                            <path id="milkLevel" d="M 232 230 L 252 230 L 249 208 L 235 208 Z" fill="#E0F2FE" />
+                            <!-- 屋根部分 -->
+                            <polygon points="235,198 249,198 242,190" fill="#0284C7" />
+                            
+                            <!-- かわいい牛のマーク 🐮 -->
+                            <g id="cowMark" transform="translate(242, 212) scale(0.65)">
+                                <!-- 顔 -->
+                                <ellipse cx="0" cy="0" rx="7" ry="5.5" fill="#0F172A" />
+                                <ellipse cx="0" cy="2" rx="5" ry="3" fill="#FFEDD5" />
+                                <!-- 鼻の穴 -->
+                                <circle cx="-1.8" cy="2" r="0.7" fill="#78350F" />
+                                <circle cx="1.8" cy="2" r="0.7" fill="#78350F" />
+                                <!-- 角 -->
+                                <path d="M -5 -3 L -7 -6 M 5 -3 L 7 -6" stroke="#F59E0B" stroke-width="1.5" stroke-linecap="round" />
+                                <!-- つぶらな目 -->
+                                <circle cx="-3" cy="-1.5" r="1" fill="#FFFFFF" />
+                                <circle cx="3" cy="-1.5" r="1" fill="#FFFFFF" />
+                            </g>
+                        </g>
+                    </g>
+                </svg>
+            </div>
+
+            <!-- 中央にタイマー時間のテキスト（重ね表示） -->
+            <div class="absolute bottom-2 md:bottom-4 z-20 flex flex-col items-center">
+                <div id="timerDisplay" class="text-4xl sm:text-5xl font-black tracking-tight text-slate-800 font-mono drop-shadow-md bg-white/90 backdrop-blur px-5 py-1 rounded-2xl border border-slate-200">
+                    15:00
+                </div>
+            </div>
+        </div>
+
+        <!-- コントロールエリア -->
+        <div class="w-full max-w-sm bg-white/90 backdrop-blur rounded-3xl p-5 shadow-lg border border-emerald-100 flex flex-col items-center gap-4">
+
+            <!-- スタート / ストップ / リセット ボタン -->
+            <div class="flex gap-3 w-full">
+                <button id="startBtn" class="btn-bounce flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg py-3 rounded-2xl shadow-[0_4px_0_#059669] flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-play text-base"></i> すたーと
+                </button>
+                <button id="pauseBtn" class="btn-bounce flex-1 bg-amber-500 hover:bg-amber-600 text-white font-black text-lg py-3 rounded-2xl shadow-[0_4px_0_#D97706] hidden flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-pause text-base"></i> とめる
+                </button>
+                <button id="resetBtn" class="btn-bounce bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-lg px-5 py-3 rounded-2xl shadow-[0_4px_0_#94A3B8] transition">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </div>
+
+            <!-- プリセット時間選択 -->
+            <div class="w-full flex flex-col gap-1.5 pt-1 border-t border-gray-100">
+                <div class="grid grid-cols-4 gap-2">
+                    <button data-time="300" class="preset-btn btn-bounce bg-slate-50 hover:bg-emerald-50 text-slate-700 font-bold py-2 rounded-xl border border-slate-200 text-sm">
+                        5ふん
+                    </button>
+                    <button data-time="600" class="preset-btn btn-bounce bg-slate-50 hover:bg-emerald-50 text-slate-700 font-bold py-2 rounded-xl border border-slate-200 text-sm">
+                        10ふん
+                    </button>
+                    <button data-time="900" class="preset-btn btn-bounce bg-emerald-50 text-emerald-800 font-black py-2 rounded-xl border-2 border-emerald-400 text-sm ring-2 ring-emerald-200">
+                        15ふん
+                    </button>
+                    <button data-time="1200" class="preset-btn btn-bounce bg-slate-50 hover:bg-emerald-50 text-slate-700 font-bold py-2 rounded-xl border border-slate-200 text-sm">
+                        20ふん
+                    </button>
+                </div>
+                
+                <!-- 微調整 (+/- 1分) -->
+                <div class="flex justify-between items-center gap-2 mt-1">
+                    <button id="minusMinute" class="flex-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 py-1.5 rounded-lg border border-slate-200 transition">
+                        - 1ふん
+                    </button>
+                    <span class="text-xs font-bold text-slate-400">じかんの ちょうせい</span>
+                    <button id="plusMinute" class="flex-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 py-1.5 rounded-lg border border-slate-200 transition">
+                        + 1ふん
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- フッター -->
+    <footer class="text-center text-xs text-emerald-800/60 font-bold py-1">
+        さんかくたべで ばランスよく たべようね
+    </footer>
+
+    <!-- JavaScript ロジック -->
+    <script>
+        // --- 状態管理 ---
+        let totalSeconds = 900; // 初期値: 15分 (900秒)
+        let remainingSeconds = 900;
+        let timerInterval = null;
+        let isRunning = false;
+        let soundEnabled = true;
+
+        // 円の周長: 2 * π * r (r = 142) = 約 892.2
+        const CIRCUMFERENCE = 2 * Math.PI * 142;
+
+        // --- DOM要素 ---
+        const timerDisplay = document.getElementById('timerDisplay');
+        const progressRingCircle = document.getElementById('progressRingCircle');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const owlContainer = document.getElementById('owlContainer');
+        const steamGroup = document.getElementById('steamGroup');
+        const statusBadge = document.getElementById('statusBadge');
+        const soundToggleBtn = document.getElementById('soundToggleBtn');
+        const soundIcon = document.getElementById('soundIcon');
+        const soundText = document.getElementById('soundText');
+        const presetBtns = document.querySelectorAll('.preset-btn');
+        const plusMinuteBtn = document.getElementById('plusMinute');
+        const minusMinuteBtn = document.getElementById('minusMinute');
+        const speechBubble = document.getElementById('speechBubble');
+
+        // 給食要素DOM
+        const riceAmount = document.getElementById('riceAmount');
+        const misoAmount = document.getElementById('misoAmount');
+        const meatAmount = document.getElementById('meatAmount');
+        const vegAmount = document.getElementById('vegAmount');
+        const milkLevel = document.getElementById('milkLevel');
+        const angryBrows = document.getElementById('angryBrows');
+        const sweatMarks = document.getElementById('sweatMarks');
+        const thanksEyes = document.getElementById('thanksEyes');
+
+        // 円形プログレスバーの初期設定
+        progressRingCircle.style.strokeDasharray = `${CIRCUMFERENCE}`;
+
+        // --- 給食の減り具合を更新 ---
+        function updateFoodAmount(fraction) {
+            // fraction: 1.0 (盛り付け満タン) -> 0.0 (完食)
+            
+            // 1. 白ご飯の量（縮小）
+            riceAmount.style.transform = `scale(${fraction})`;
+            riceAmount.style.transformOrigin = "80px 225px";
+            riceAmount.style.opacity = fraction > 0.05 ? "1" : "0";
+
+            // 2. お味噌汁の量（水位低下）
+            misoAmount.style.transform = `scale(${fraction})`;
+            misoAmount.style.transformOrigin = "208px 230px";
+            misoAmount.style.opacity = fraction > 0.05 ? "1" : "0";
+
+            // 3. お肉の量
+            meatAmount.style.transform = `scale(${fraction})`;
+            meatAmount.style.transformOrigin = "130px 224px";
+            meatAmount.style.opacity = fraction > 0.05 ? "1" : "0";
+
+            // 4. お野菜の量
+            vegAmount.style.transform = `scale(${fraction})`;
+            vegAmount.style.transformOrigin = "158px 223px";
+            vegAmount.style.opacity = fraction > 0.05 ? "1" : "0";
+
+            // 5. 牛乳の残量
+            const milkY = 230 - (22 * fraction);
+            milkLevel.setAttribute('d', `M 232 230 L 252 230 L ${232 + (17 * fraction)} ${milkY} L ${252 - (17 * fraction)} ${milkY} Z`);
+        }
+
+        // --- Web Audio API (効果音・チャイム) ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+        }
+
+        function playBeep(freq = 880, duration = 0.1) {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.log("Audio error", e);
+            }
+        }
+
+        function playFinishChime() {
+            if (!soundEnabled) return;
+            initAudio();
+            const notes = [
+                { f: 554.37, d: 0.8 }, // C#5
+                { f: 440.00, d: 0.8 }, // A4
+                { f: 493.88, d: 0.8 }, // B4
+                { f: 329.63, d: 1.2 }, // E4
+                { f: 0, d: 0.2 },
+                { f: 440.00, d: 0.8 }, // A4
+                { f: 493.88, d: 0.8 }, // B4
+                { f: 554.37, d: 0.8 }, // C#5
+                { f: 440.00, d: 1.5 }  // A4
+            ];
+
+            let currentTime = audioCtx.currentTime;
+            notes.forEach(note => {
+                if (note.f > 0) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(note.f, currentTime);
+                    gain.gain.setValueAtTime(0.15, currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, currentTime + note.d);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(currentTime);
+                    osc.stop(currentTime + note.d);
+                }
+                currentTime += note.d;
+            });
+        }
+
+        // --- アニメーション状態の設定 ---
+        function updateOwlAnimation() {
+            if (!isRunning) {
+                owlContainer.classList.remove('eating', 'eating-hurry');
+                steamGroup.classList.add('opacity-0');
+                angryBrows.classList.add('opacity-0');
+                sweatMarks.classList.add('opacity-0');
+                return;
+            }
+
+            // タイマー実行中は吹き出しとごちそうさまの目を隠す
+            speechBubble.classList.add('opacity-0', 'scale-75');
+            speechBubble.classList.remove('opacity-100', 'scale-100');
+            thanksEyes.classList.add('opacity-0');
+            owlContainer.classList.remove('thanks-wings');
+
+            steamGroup.classList.remove('opacity-0');
+
+            if (remainingSeconds <= 300) { // 残り5分以下：急ぎモーション＆焦り顔
+                owlContainer.classList.remove('eating');
+                owlContainer.classList.add('eating-hurry');
+                angryBrows.classList.remove('opacity-0');
+                sweatMarks.classList.remove('opacity-0');
+            } else { // 通常モーション
+                owlContainer.classList.remove('eating-hurry');
+                owlContainer.classList.add('eating');
+                angryBrows.classList.add('opacity-0');
+                sweatMarks.classList.add('opacity-0');
+            }
+        }
+
+        // --- 画面更新関数 ---
+        function updateDisplay() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            
+            // 時間表示 (00:00)
+            timerDisplay.textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            document.title = `(${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}) きゅうしょくタイマー`;
+
+            // 円形プログレスバーの計算
+            const fraction = totalSeconds > 0 ? (remainingSeconds / totalSeconds) : 0;
+            const offset = CIRCUMFERENCE * (1 - fraction);
+            progressRingCircle.style.strokeDashoffset = offset;
+
+            // 給食の盛り付け/減り具合を更新
+            updateFoodAmount(fraction);
+
+            // アニメーション更新
+            updateOwlAnimation();
+
+            // 残り時間による色とメッセージの変化
+            if (remainingSeconds <= 300 && remainingSeconds > 0) { // 残り5分以下
+                progressRingCircle.setAttribute('stroke', '#f59e0b'); // オレンジ色
+                timerDisplay.className = "text-4xl sm:text-5xl font-black tracking-tight text-amber-600 font-mono drop-shadow-md bg-white/90 backdrop-blur px-5 py-1 rounded-2xl border border-amber-200";
+                
+                if (isRunning) {
+                    statusBadge.textContent = "⚡ フクちゃん いそいで たべているよ！ ⚡";
+                    statusBadge.className = "bg-amber-100 border-2 border-amber-400 text-amber-900 font-bold text-base md:text-xl px-6 py-2 rounded-full shadow-sm text-center animate-bounce";
+                }
+            } else if (remainingSeconds > 300) {
+                progressRingCircle.setAttribute('stroke', '#10b981'); // エメラルドグリーン
+                timerDisplay.className = "text-4xl sm:text-5xl font-black tracking-tight text-slate-800 font-mono drop-shadow-md bg-white/90 backdrop-blur px-5 py-1 rounded-2xl border border-slate-200";
+                
+                if (isRunning) {
+                    statusBadge.textContent = "フクちゃんと ゆっくり たべよう";
+                    statusBadge.className = "bg-emerald-50 border-2 border-emerald-300 text-emerald-900 font-bold text-base md:text-xl px-6 py-2 rounded-full shadow-sm text-center";
+                }
+            }
+        }
+
+        // --- タイマー制御 ---
+        function startTimer() {
+            if (isRunning) return;
+            initAudio();
+            playBeep(1000, 0.1);
+
+            // ごちそうさま状態の解除
+            speechBubble.classList.add('opacity-0', 'scale-75');
+            speechBubble.classList.remove('opacity-100', 'scale-100');
+            thanksEyes.classList.add('opacity-0');
+            owlContainer.classList.remove('thanks-wings');
+
+            isRunning = true;
+            startBtn.classList.add('hidden');
+            pauseBtn.classList.remove('hidden');
+
+            updateDisplay();
+
+            timerInterval = setInterval(() => {
+                if (remainingSeconds > 0) {
+                    remainingSeconds--;
+                    updateDisplay();
+                } else {
+                    finishTimer();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            if (!isRunning) return;
+            playBeep(600, 0.1);
+
+            isRunning = false;
+            clearInterval(timerInterval);
+
+            startBtn.classList.remove('hidden');
+            pauseBtn.classList.add('hidden');
+
+            updateOwlAnimation();
+
+            statusBadge.textContent = "いったん きゅうけいちゅう";
+            statusBadge.className = "bg-slate-100 border-2 border-slate-300 text-slate-700 font-bold text-base md:text-xl px-6 py-2 rounded-full shadow-sm text-center";
+        }
+
+        function resetTimer() {
+            playBeep(500, 0.08);
+            pauseTimer();
+            remainingSeconds = totalSeconds;
+            
+            // ごちそうさまポーズ・吹き出し解除
+            speechBubble.classList.add('opacity-0', 'scale-75');
+            speechBubble.classList.remove('opacity-100', 'scale-100');
+            thanksEyes.classList.add('opacity-0');
+            owlContainer.classList.remove('thanks-wings');
+
+            // 給食を再び綺麗に盛り付け直す
+            updateDisplay();
+
+            statusBadge.textContent = "よく かんで おいしく たべようね！";
+            statusBadge.className = "bg-amber-50/90 border-2 border-amber-300/80 text-amber-900 font-bold text-base md:text-xl px-6 py-2 rounded-full shadow-sm text-center";
+        }
+
+        function finishTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+
+            startBtn.classList.remove('hidden');
+            pauseBtn.classList.add('hidden');
+
+            // タイマー停止・表情とポーズの切り替え（ごちそうさま）
+            owlContainer.classList.remove('eating', 'eating-hurry');
+            steamGroup.classList.add('opacity-0');
+            angryBrows.classList.add('opacity-0');
+            sweatMarks.classList.add('opacity-0');
+
+            // 目を瞑り、手を合わせる
+            thanksEyes.classList.remove('opacity-0');
+            owlContainer.classList.add('thanks-wings');
+
+            // 吹き出しアニメーション表示
+            speechBubble.classList.remove('opacity-0', 'scale-75');
+            speechBubble.classList.add('opacity-100', 'scale-100');
+
+            statusBadge.textContent = "🎉 ごちそうさまでした！ 🎉";
+            statusBadge.className = "bg-red-100 border-2 border-red-400 text-red-800 font-black text-lg md:text-2xl px-8 py-2 rounded-full shadow-lg animate-bounce text-center";
+
+            progressRingCircle.setAttribute('stroke', '#ef4444');
+            progressRingCircle.style.strokeDashoffset = `${CIRCUMFERENCE}`;
+
+            playFinishChime();
+        }
+
+        // --- イベントリスナー ---
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        resetBtn.addEventListener('click', resetTimer);
+
+        // プリセット時間ボタン
+        presetBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                presetBtns.forEach(b => {
+                    b.className = "preset-btn btn-bounce bg-slate-50 hover:bg-emerald-50 text-slate-700 font-bold py-2 rounded-xl border border-slate-200 text-sm";
+                });
+                btn.className = "preset-btn btn-bounce bg-emerald-50 text-emerald-800 font-black py-2 rounded-xl border-2 border-emerald-400 text-sm ring-2 ring-emerald-200";
+
+                const time = parseInt(btn.getAttribute('data-time'), 10);
+                totalSeconds = time;
+                resetTimer(); // 時間セットと同時にご飯が盛られます
+            });
+        });
+
+        // +/- 1分調整
+        plusMinuteBtn.addEventListener('click', () => {
+            totalSeconds += 60;
+            remainingSeconds += 60;
+            updateDisplay();
+            playBeep(700, 0.05);
+        });
+
+        minusMinuteBtn.addEventListener('click', () => {
+            if (remainingSeconds > 60 && totalSeconds > 60) {
+                totalSeconds -= 60;
+                remainingSeconds -= 60;
+                updateDisplay();
+                playBeep(400, 0.05);
+            }
+        });
+
+        // サウンドトグル
+        soundToggleBtn.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            if (soundEnabled) {
+                soundIcon.className = "fa-solid fa-volume-high text-lg";
+                soundText.textContent = "おと: オン";
+                soundToggleBtn.classList.remove('bg-slate-100', 'text-slate-500');
+                soundToggleBtn.classList.add('bg-emerald-50', 'text-emerald-800');
+                playBeep(880, 0.1);
+            } else {
+                soundIcon.className = "fa-solid fa-volume-xmark text-lg";
+                soundText.textContent = "おと: オフ";
+                soundToggleBtn.classList.remove('bg-emerald-50', 'text-emerald-800');
+                soundToggleBtn.classList.add('bg-slate-100', 'text-slate-500');
+            }
+        });
+
+        // 初期表示
+        updateDisplay();
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>給食もぐもぐフクロウタイマー</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* 超・落ち着いたリアルなフクロウのアニメーション定義 */
+        
+        /* 全体のゆったりした息づかい */
+        @keyframes gentle-breath {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-2px) scale(1.003, 0.997); }
+        }
+
+        /* 非常にゆっくり味わうもぐもぐ動作 (周期を大幅に長く設定) */
+        @keyframes gentle-chew {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            20% { transform: translateY(1px) rotate(-0.5deg); }
+            40% { transform: translateY(-0.3px) rotate(0.5deg); }
+            60% { transform: translateY(0.8px) rotate(-0.3deg); }
+            80% { transform: translateY(0px) rotate(0.3deg); }
+        }
+
+        /* くちばしのモグモグ（ゆったり） */
+        @keyframes beak-chew {
+            0%, 100% { transform: scaleY(1); }
+            30% { transform: scaleY(0.9) translateY(0.8px); }
+            60% { transform: scaleY(0.96); }
+            85% { transform: scaleY(0.88) translateY(1px); }
+        }
+
+        /* とてもゆったりとした首傾げ */
+        @keyframes head-tilt {
+            0%, 100% { transform: rotate(0deg); }
+            30% { transform: rotate(-2deg); }
+            70% { transform: rotate(2deg); }
+        }
+
+        /* 翼のわずかな動き */
+        @keyframes wing-subtle-l {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-1deg) translateY(-0.5px); }
+        }
+        @keyframes wing-subtle-r {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(1deg) translateY(-0.5px); }
+        }
+
+        /* リアルな二重のまばたき */
+        @keyframes natural-blink {
+            0%, 94%, 97%, 100% { transform: scaleY(1); }
+            95.5%, 98.5% { transform: scaleY(0.05); }
+        }
+
+        /* 湯気（ゆっくり立ち上る） */
+        @keyframes slow-steam {
+            0% { opacity: 0; transform: translateY(0) scale(0.7); }
+            40% { opacity: 0.5; }
+            100% { opacity: 0; transform: translateY(-25px) scale(1.2); }
+        }
+
+        /* 焦り汗のアニメーション */
+        @keyframes sweat-drop {
+            0%, 100% { transform: translateY(0) scale(0.8); opacity: 0; }
+            30% { transform: translateY(3px) scale(1.1); opacity: 0.9; }
+            80% { transform: translateY(10px) scale(0.9); opacity: 0.2; }
+        }
+
+        /* アニメーションクラス適用（時間を長めに設定してゆっくりに） */
+        .owl-group {
+            animation: gentle-breath 6s infinite ease-in-out;
+        }
+
+        .owl-head {
+            animation: head-tilt 16s infinite ease-in-out;
+            transform-origin: 150px 140px;
+        }
+
+        .owl-eye-lid {
+            animation: natural-blink 8s infinite;
+            transform-origin: 150px 105px;
+        }
+
+        /* 通常時のゆったりもぐもぐ（タイマー動作時） */
+        .eating .owl-head {
+            animation: head-tilt 16s infinite ease-in-out, gentle-chew 5s infinite ease-in-out;
+        }
+        .eating .owl-beak {
+            animation: beak-chew 2.5s infinite ease-in-out;
+            transform-origin: 150px 125px;
+        }
+        .eating .owl-wing-left {
+            animation: wing-subtle-l 7s infinite ease-in-out;
+            transform-origin: 90px 140px;
+        }
+        .eating .owl-wing-right {
+            animation: wing-subtle-r 7s infinite ease-in-out;
+            transform-origin: 210px 140px;
+        }
+
+        /* 残り5分以下：急いで食べるアニメーション（スピードアップ） */
+        .eating-hurry .owl-head {
+            animation: head-tilt 6s infinite ease-in-out, gentle-chew 1.8s infinite ease-in-out;
+        }
+        .eating-hurry .owl-beak {
+            animation: beak-chew 0.9s infinite ease-in-out;
+            transform-origin: 150px 125px;
+        }
+        .eating-hurry .owl-wing-left {
+            animation: wing-subtle-l 3s infinite ease-in-out;
+            transform-origin: 90px 140px;
+        }
+        .eating-hurry .owl-wing-right {
+            animation: wing-subtle-r 3s infinite ease-in-out;
+            transform-origin: 210px 140px;
+        }
+
+        /* 急いでいる時の汗アニメーション */
+        .sweat-mark-1 { animation: sweat-drop 1.2s infinite ease-in 0s; }
+        .sweat-mark-2 { animation: sweat-drop 1.2s infinite ease-in 0.6s; }
+
+        /* ごちそうさまポーズ用の手（羽）のスタイル */
+        .thanks-wings .owl-wing-left {
+            transform: rotate(45deg) translate(25px, -15px) !important;
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .thanks-wings .owl-wing-right {
+            transform: rotate(-45deg) translate(-25px, -15px) !important;
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* 湯気アニメーション */
+        .steam-1 { animation: slow-steam 4s infinite ease-out 0s; }
+        .steam-2 { animation: slow-steam 4s infinite ease-out 1.6s; }
+        .steam-3 { animation: slow-steam 4s infinite ease-out 2.8s; }
+
+        /* ボタン影・質感 */
+        .btn-bounce {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-bounce:active {
+            transform: translateY(2px);
+            box-shadow: none !important;
+        }
+
+        /* 円形プログレスバーの移行効果 */
+        #progressRingCircle {
+            transition: stroke-dashoffset 0.8s linear, stroke 0.5s ease;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-gray-800 p-3 md:p-6">
+
+    <!-- ヘッダーエリア -->
+    <header class="max-w-4xl w-full mx-auto flex justify-between items-center bg-white/80 backdrop-blur-md rounded-2xl p-3 md:p-4 shadow-sm border border-emerald-100/80">
+        <div class="flex items-center gap-3">
+            <span class="text-3xl">🦉</span>
+            <div>
+                <h1 class="text-lg md:text-2xl font-black text-emerald-900 tracking-wide">きゅうしょく もぐもぐ タイマー</h1>
+                <p class="text-xs text-emerald-600 hidden sm:block">フクちゃんと いっしょに ゆっくり おいしく たべよう</p>
+            </div>
+        </div>
+        <button id="soundToggleBtn" class="flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold px-4 py-2 rounded-xl transition border border-emerald-200/60 shadow-sm">
+            <i id="soundIcon" class="fa-solid fa-volume-high text-lg"></i>
+            <span id="soundText" class="hidden sm:inline text-sm">おと: オン</span>
+        </button>
+    </header>
+
+    <!-- メインコンテンツエリア -->
+    <main class="max-w-4xl w-full mx-auto my-auto flex flex-col items-center justify-center gap-4 py-2">
+
+        <!-- メッセージバナー -->
+        <div id="statusBadge" class="bg-amber-50/90 border-2 border-amber-300/80 text-amber-900 font-bold text-base md:text-xl px-6 py-2 rounded-full shadow-sm text-center transition-all duration-300">
+            よく かんで おいしく たべようね！
+        </div>
+
+        <!-- フクロウと円形時計タイマーの結合コンテナ -->
+        <div class="relative w-72 h-72 sm:w-96 sm:h-96 md:w-[420px] md:h-[420px] flex items-center justify-center">
+            
+            <!-- ごちそうさまでした 吹き出し -->
+            <div id="speechBubble" class="absolute -top-4 sm:-top-6 z-30 opacity-0 transition-all duration-500 transform scale-75 pointer-events-none">
+                <div class="relative bg-white border-4 border-amber-400 text-amber-900 font-black text-xl sm:text-2xl px-6 py-3 rounded-3xl shadow-xl flex items-center gap-2">
+                    <span>🙏 ごちそうさまでした！</span>
+                    <!-- 吹き出しのしっぽ -->
+                    <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[12px] border-t-amber-400"></div>
+                    <div class="absolute -bottom-[7px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-white"></div>
+                </div>
+            </div>
+
+            <!-- 1. バックグラウンド 円形時計プログレスバー (SVG) -->
+            <svg class="absolute inset-0 w-full h-full -rotate-90 drop-shadow-md" viewBox="0 0 320 320">
+                <!-- 背景リング（時計の外枠・目盛りトラック） -->
+                <circle cx="160" cy="160" r="142" fill="none" stroke="#e2e8f0" stroke-width="14" />
+                <circle cx="160" cy="160" r="150" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4 8" />
+                
+                <!-- 時間とともに減っていくアニメーションリング -->
+                <circle id="progressRingCircle" cx="160" cy="160" r="142" fill="none" 
+                        stroke="#10b981" stroke-width="14" stroke-linecap="round"
+                        stroke-dasharray="892.2" stroke-dashoffset="0" />
+            </svg>
+
+            <!-- 2. 中央のフクロウと給食イラスト (SVG) -->
+            <div id="owlContainer" class="relative w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 flex items-center justify-center z-10">
+                
+                <!-- 湯気エフェクト（温かいご飯・お味噌汁用） -->
+                <div id="steamGroup" class="absolute top-12 left-16 z-20 opacity-0 transition-opacity duration-500">
+                    <div class="absolute w-3 h-3 bg-white/70 rounded-full steam-1 -left-1"></div>
+                    <div class="absolute w-4 h-4 bg-white/70 rounded-full steam-2 left-3"></div>
+                    <div class="absolute w-3 h-3 bg-white/70 rounded-full steam-3 left-7"></div>
+                </div>
+
+                <svg class="w-full h-full drop-shadow-lg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <!-- ぬいぐるみ風グラデーション・パターン定義 -->
+                        <!-- 1. フェルト布地のざらっとしたテクスチャパターン -->
+                        <pattern id="feltTexture" width="8" height="8" patternUnits="userSpaceOnUse">
+                            <rect width="8" height="8" fill="#8D4B28"/>
+                            <circle cx="2" cy="2" r="1" fill="#783D1E" opacity="0.4"/>
+                            <circle cx="6" cy="6" r="1" fill="#A25932" opacity="0.4"/>
+                        </pattern>
+
+                        <pattern id="bellyFelt" width="8" height="8" patternUnits="userSpaceOnUse">
+                            <rect width="8" height="8" fill="#FFF6DF"/>
+                            <circle cx="3" cy="3" r="1" fill="#FCE7BD" opacity="0.6"/>
+                            <circle cx="7" cy="7" r="1" fill="#FFFFFF" opacity="0.8"/>
+                        </pattern>
+
+                        <linearGradient id="plushBody" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#B86638" />
+                            <stop offset="100%" stop-color="#80411B" />
+                        </linearGradient>
+
+                        <!-- ボタン目のプラスチック質感 -->
+                        <radialGradient id="buttonEye" cx="35%" cy="35%" r="60%">
+                            <stop offset="0%" stop-color="#4B5563" />
+                            <stop offset="30%" stop-color="#111827" />
+                            <stop offset="100%" stop-color="#030712" />
+                        </radialGradient>
+
+                        <linearGradient id="woodTable" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#B45309" />
+                            <stop offset="100%" stop-color="#78350F" />
+                        </linearGradient>
+
+                        <linearGradient id="misoSoup" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#D97706" />
+                            <stop offset="100%" stop-color="#92400E" />
+                        </linearGradient>
+                    </defs>
+
+                    <!-- 木のテーブル -->
+                    <rect x="20" y="242" width="260" height="30" rx="6" fill="url(#woodTable)" />
+                    <line x1="20" y1="246" x2="280" y2="246" stroke="#D97706" stroke-width="2" opacity="0.4" />
+
+                    <!-- フクロウ全体グループ（ふわふわぬいぐるみデザイン） -->
+                    <g class="owl-group">
+                        <!-- 足（フェルトのボタン足風） -->
+                        <path d="M 122 240 L 115 248 M 125 240 L 125 250 M 128 240 L 133 248" stroke="#D97706" stroke-width="4" stroke-linecap="round" />
+                        <path d="M 172 240 L 167 248 M 175 240 L 175 250 M 178 240 L 183 248" stroke="#D97706" stroke-width="4" stroke-linecap="round" />
+
+                        <!-- 体ベース（ふわふわモコモコのボア地） -->
+                        <path d="M 150 85 
+                                C 170 85, 210 95, 218 120 
+                                C 228 150, 230 180, 222 205 
+                                C 215 230, 190 244, 150 244 
+                                C 110 244, 85 230, 78 205 
+                                C 70 180, 72 150, 82 120 
+                                C 90 95, 130 85, 150 85 Z" 
+                              fill="url(#plushBody)" stroke="#5B2B10" stroke-width="3.5" stroke-linejoin="round" />
+                        
+                        <!-- ふわふわ毛並み（モコモコ輪郭オーバーレイ） -->
+                        <path d="M 78 205 Q 73 190 75 170 Q 70 150 78 135 Q 72 120 85 110 M 222 205 Q 227 190 225 170 Q 230 150 222 135 Q 228 120 215 110" 
+                              fill="none" stroke="#A5582B" stroke-width="4" stroke-linecap="round" opacity="0.7" />
+
+                        <!-- お腹（ふわふわモコモコ白フェルトパッチ） -->
+                        <path d="M 150 120 
+                                C 175 120, 202 140, 200 178 
+                                C 198 210, 175 235, 150 235 
+                                C 125 235, 102 210, 100 178 
+                                C 98 140, 125 120, 150 120 Z" 
+                              fill="url(#bellyFelt)" stroke="#D97706" stroke-width="2" />
+                        
+                        <!-- お腹の模様 -->
+                        <g stroke="#B45309" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7">
+                            <path d="M 134 148 Q 142 155 150 148 M 150 148 Q 158 155 166 148" />
+                            <path d="M 125 168 Q 137 177 150 168 M 150 168 Q 163 177 175 168" />
+                            <path d="M 130 190 Q 140 198 150 190 M 150 190 Q 160 198 170 190" />
+                        </g>
+
+                        <!-- 左羽 -->
+                        <g class="owl-wing-left">
+                            <path d="M 80 130 C 58 150 52 195 82 210 C 90 180 88 150 80 130 Z" fill="#6A2E05" stroke="#3D1A03" stroke-width="2.5" />
+                        </g>
+                        <!-- 右羽 -->
+                        <g class="owl-wing-right">
+                            <path d="M 220 130 C 242 150 248 195 218 210 C 210 180 212 150 220 130 Z" fill="#6A2E05" stroke="#3D1A03" stroke-width="2.5" />
+                        </g>
+
+                        <!-- 頭部グループ (首振りアニメーションの対象) -->
+                        <g class="owl-head">
+                            <!-- 羽角 / 耳（布パーツ：小さく可愛らしく調整） -->
+                            <path d="M 102 78 L 88 52 L 118 64 Z" fill="#5B2B10" stroke="#3D1A03" stroke-width="2" />
+                            <path d="M 198 78 L 212 52 L 182 64 Z" fill="#5B2B10" stroke="#3D1A03" stroke-width="2" />
+                            <path d="M 104 76 L 94 57 L 118 64 Z" fill="#8B4513" />
+                            <path d="M 196 76 L 206 57 L 182 64 Z" fill="#8B4513" />
+
+                            <!-- 頭部ベース（モコモコ丸みのある毛並み） -->
+                            <circle cx="150" cy="110" r="62" fill="url(#plushBody)" stroke="#5B2B10" stroke-width="3.5" />
+                            
+                            <!-- 顔のワッペン（ふわふわ白フェルト地） -->
+                            <path d="M 150 82 C 120 60 90 85 92 118 C 94 142 125 152 150 152 C 175 152 206 142 208 118 C 210 85 180 60 150 82 Z" fill="#FFFBEB" stroke="#FCD34D" stroke-width="2" />
+
+                            <!-- 目（ボタン目ワッペン） -->
+                            <circle cx="120" cy="108" r="24" fill="#FEF3C7" stroke="#D97706" stroke-width="2" />
+                            <circle cx="180" cy="108" r="24" fill="#FEF3C7" stroke="#D97706" stroke-width="2" />
+
+                            <!-- 瞳（つやつやのボタン目パーツ 🧵） -->
+                            <g class="owl-eye-lid">
+                                <!-- ボタン本体 -->
+                                <circle class="normal-eye" cx="122" cy="108" r="16" fill="url(#buttonEye)" />
+                                <circle class="normal-eye" cx="178" cy="108" r="16" fill="url(#buttonEye)" />
+                                <!-- ボタンの穴と糸（縫い目） -->
+                                <circle class="normal-eye" cx="120" cy="106" r="1.5" fill="#9CA3AF" />
+                                <circle class="normal-eye" cx="124" cy="110" r="1.5" fill="#9CA3AF" />
+                                <line class="normal-eye" x1="120" y1="106" x2="124" y2="110" stroke="#E5E7EB" stroke-width="1" />
+                                
+                                <circle class="normal-eye" cx="176" cy="106" r="1.5" fill="#9CA3AF" />
+                                <circle class="normal-eye" cx="180" cy="110" r="1.5" fill="#9CA3AF" />
+                                <line class="normal-eye" x1="176" y1="106" x2="180" y2="110" stroke="#E5E7EB" stroke-width="1" />
+
+                                <!-- ボタンのつや・ハイライト -->
+                                <circle class="normal-eye" cx="116" cy="102" r="4" fill="#FFFFFF" opacity="0.8" />
+                                <circle class="normal-eye" cx="172" cy="102" r="4" fill="#FFFFFF" opacity="0.8" />
+                            </g>
+
+                            <!-- ごちそうさま（目を瞑る刺繍糸目） -->
+                            <g id="thanksEyes" class="opacity-0 transition-opacity duration-300">
+                                <path d="M 106 110 Q 120 96 134 110" stroke="#4A1E02" stroke-width="5" stroke-linecap="round" fill="none" />
+                                <path d="M 166 110 Q 180 96 194 110" stroke="#4A1E02" stroke-width="5" stroke-linecap="round" fill="none" />
+                            </g>
+
+                            <!-- 急いでいる時の怒り・焦り目元パーツ -->
+                            <g id="angryBrows" class="opacity-0 transition-opacity duration-300">
+                                <path d="M 98 88 L 138 102 L 136 94 Z" fill="#4A1E02" />
+                                <path d="M 202 88 L 162 102 L 164 94 Z" fill="#4A1E02" />
+                            </g>
+
+                            <!-- 焦り汗マーク (💦) -->
+                            <g id="sweatMarks" class="opacity-0 transition-opacity duration-300">
+                                <path class="sweat-mark-1" d="M 82 92 Q 78 85 82 80 C 87 85 86 92 82 92 Z" fill="#38BDF8" />
+                                <path class="sweat-mark-2" d="M 218 92 Q 214 85 218 80 C 223 85 222 92 218 92 Z" fill="#38BDF8" />
+                            </g>
+
+                            <!-- くちばし（フェルトパーツ） -->
+                            <path class="owl-beak" d="M 143 114 C 143 114 150 110 157 114 C 160 125 155 138 150 140 C 145 138 140 125 143 114 Z" fill="#F59E0B" stroke="#B45309" stroke-width="2" />
+
+                            <!-- ほんのり優しい布チーク（刺繍風） -->
+                            <circle cx="102" cy="126" r="8" fill="#FCA5A5" opacity="0.6" />
+                            <circle cx="198" cy="126" r="8" fill="#FCA5A5" opacity="0.6" />
+                        </g>
+                    </g>
+                    <!-- 給食セット (手前：時間経過に合わせて動的に変化) -->
+                    <g id="lunchSet">
+                        <!-- トレイ（木目のお盆） -->
+                        <rect x="35" y="228" width="230" height="18" rx="6" fill="#FDE68A" stroke="#D97706" stroke-width="2" />
+                        <rect x="40" y="230" width="220" height="12" rx="4" fill="#FEF3C7" />
+
+                        <!-- 1. ご飯のお茶碗 (左側) -->
+                        <g id="riceBowlGroup">
+                            <!-- 白ご飯（時間経過で縮小） -->
+                            <g id="riceAmount">
+                                <ellipse cx="80" cy="225" rx="19" ry="12" fill="#FFFFFF" />
+                                <ellipse cx="80" cy="222" rx="16" ry="9" fill="#F8FAFC" />
+                                <!-- つぶつぶ質感 -->
+                                <circle cx="74" cy="221" r="1.5" fill="#E2E8F0" />
+                                <circle cx="82" cy="218" r="1.5" fill="#E2E8F0" />
+                                <circle cx="87" cy="222" r="1.5" fill="#E2E8F0" />
+                            </g>
+                            <!-- 茶碗 -->
+                            <path d="M 60 225 C 60 242 100 242 100 225 Z" fill="#3B82F6" stroke="#1D4ED8" stroke-width="1.5" />
+                            <ellipse cx="80" cy="225" rx="20" ry="4" fill="none" stroke="#1D4ED8" stroke-width="1.5" />
+                        </g>
+
+                        <!-- 2. お味噌汁 (右側前) -->
+                        <g id="soupBowlGroup">
+                            <!-- お椀 -->
+                            <path d="M 190 227 C 190 243 226 243 226 227 Z" fill="#78350F" stroke="#451A03" stroke-width="1.5" />
+                            <ellipse cx="208" cy="227" rx="18" ry="4" fill="#451A03" />
+                            <!-- 味噌汁の液面・具材（時間で減少） -->
+                            <g id="misoAmount">
+                                <ellipse id="misoSurface" cx="208" cy="227" rx="16" ry="3" fill="url(#misoSoup)" />
+                                <!-- 具（豆腐・わかめ） -->
+                                <rect id="tofu1" x="202" y="225" width="4" height="3" rx="0.5" fill="#FFFFFF" />
+                                <rect id="tofu2" x="210" y="226" width="3" height="3" rx="0.5" fill="#FFFFFF" />
+                                <path id="wakame" d="M 198 226 Q 200 228 202 226" stroke="#15803D" stroke-width="2" fill="none" />
+                            </g>
+                        </g>
+
+                        <!-- 3. 2つの部屋のある平皿 (中央) -->
+                        <g id="plateGroup">
+                            <!-- 平皿ベース (2つの仕切り部屋) -->
+                            <path d="M 112 226 C 112 238 178 238 178 226 Z" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" />
+                            <ellipse cx="145" cy="226" rx="33" ry="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1" />
+                            <!-- 真ん中の仕切り壁 -->
+                            <line x1="145" y1="222" x2="145" y2="231" stroke="#CBD5E1" stroke-width="2" />
+
+                            <!-- 左部屋：お肉（ハンバーグ/唐揚げ風） -->
+                            <g id="meatAmount">
+                                <ellipse cx="130" cy="224" rx="10" ry="5" fill="#78350F" />
+                                <ellipse cx="129" cy="223" rx="8" ry="3.5" fill="#B45309" />
+                                <!-- タレのツヤ -->
+                                <ellipse cx="127" cy="222" rx="3" ry="1" fill="#FEF3C7" opacity="0.6" />
+                            </g>
+
+                            <!-- 右部屋：お野菜（ブロッコリー・サラダ） -->
+                            <g id="vegAmount">
+                                <!-- ブロッコリー/サラダ -->
+                                <circle cx="158" cy="222" r="4.5" fill="#15803D" />
+                                <circle cx="163" cy="223" r="4" fill="#22C55E" />
+                                <circle cx="155" cy="224" r="3.5" fill="#166534" />
+                                <!-- ミニトマト -->
+                                <circle cx="160" cy="225" r="3" fill="#EF4444" />
+                            </g>
+                        </g>
+
+                        <!-- 4. 牛のマーク入り牛乳パック (右側奥) -->
+                        <g id="milkPackGroup">
+                            <!-- パック本体 -->
+                            <path d="M 232 230 L 252 230 L 249 198 L 235 198 Z" fill="#FFFFFF" stroke="#0284C7" stroke-width="1" />
+                            <!-- 中身レベル（青色の模様高さで表現） -->
+                            <path id="milkLevel" d="M 232 230 L 252 230 L 249 208 L 235 208 Z" fill="#E0F2FE" />
+                            <!-- 屋根部分 -->
+                            <polygon points="235,198 249,198 242,190" fill="#0284C7" />
+                            
+                            <!-- かわいい牛のマーク 🐮 -->
+                            <g id="cowMark" transform="translate(242, 212) scale(0.65)">
+                                <!-- 顔 -->
+                                <ellipse cx="0" cy="0" rx="7" ry="5.5" fill="#0F172A" />
+                                <ellipse cx="0" cy="2" rx="5" ry="3" fill="#FFEDD5" />
+                                <!-- 鼻の穴 -->
+                                <circle cx="-1.8" cy="2" r="0.7" fill="#78350F" />
+                                <circle cx="1.8" cy="2" r="0.7" fill="#78350F" />
+                                <!-- 角 -->
+                                <path d="M -5 -3 L -7 -6 M 5 -3 L 7 -6" stroke="#F59E0B" stroke-width="1.5" stroke-linecap="round" />
+                                <!-- つぶらな目 -->
+                                <circle cx="-3" cy="-1.5" r="1" fill="#FFFFFF" />
+                                <circle cx="3" cy="-1.5" r="1" fill="#FFFFFF" />
+                            </g>
+                        </g>
+                    </g>
+                </svg>
+            </div>
+
+            <!-- 中央にタイマー時間のテキスト（重ね表示） -->
+            <div class="absolute bottom-2 md:bottom-4 z-20 flex flex-col items-center">
+                <div id="timerDisplay" class="text-4xl sm:text-5xl font-black tracking-tight text-slate-800 font-mono drop-shadow-md bg-white/90 backdrop-blur px-5 py-1 rounded-2xl border border-slate-200">
+                    15:00
+                </div>
+            </div>
+        </div>
+
+        <!-- コントロールエリア -->
+        <div class="w-full max-w-sm bg-white/90 backdrop-blur rounded-3xl p-5 shadow-lg border border-emerald-100 flex flex-col items-center gap-4">
+
+            <!-- スタート / ストップ / リセット ボタン -->
+            <div class="flex gap-3 w-full">
+                <button id="startBtn" class="btn-bounce flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg py-3 rounded-2xl shadow-[0_4px_0_#059669] flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-play text-base"></i> すたーと
+                </button>
+                <button id="pauseBtn" class="btn-bounce flex-1 bg-amber-500 hover:bg-amber-600 text-white font-black text-lg py-3 rounded-2xl shadow-[0_4px_0_#D97706] hidden flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-pause text-base"></i> とめる
+                </button>
+                <button id="resetBtn" class="btn-bounce bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-lg px-5 py-3 rounded-2xl shadow-[0_4px_0_#94A3B8] transition">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </div>
+
+            <!-- プリセット時間選択 -->
+            <div class="w-full flex flex-col gap-1.5 pt-1 border-t border-gray-100">
+                <div class="grid grid-cols-4 gap-2">
+                    <button data-time="300" class="preset-btn btn-bounce bg-slate-50 hover:bg-emerald-50 text-slate-700 font-bold py-2 rounded-xl border border-slate-200 text-sm">
+                        5ふん
+                    </button>
+                    <button data-time="600" class="preset-btn btn-bounce bg-slate-50 hover:bg-emerald-50 text-slate-700 font-bold py-2 rounded-xl border border-slate-200 text-sm">
+                        10ふん
+                    </button>
+                    <button data-time="900" class="preset-btn btn-bounce bg-emerald-50 text-emerald-800 font-black py-2 rounded-xl border-2 border-emerald-400 text-sm ring-2 ring-emerald-200">
+                        15ふん
+                    </button>
+                    <button data-time="1200" class="preset-btn btn-bounce bg-slate-50 hover:bg-emerald-50 text-slate-700 font-bold py-2 rounded-xl border border-slate-200 text-sm">
+                        20ふん
+                    </button>
+                </div>
+                
+                <!-- 微調整 (+/- 1分) -->
+                <div class="flex justify-between items-center gap-2 mt-1">
+                    <button id="minusMinute" class="flex-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 py-1.5 rounded-lg border border-slate-200 transition">
+                        - 1ふん
+                    </button>
+                    <span class="text-xs font-bold text-slate-400">じかんの ちょうせい</span>
+                    <button id="plusMinute" class="flex-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 py-1.5 rounded-lg border border-slate-200 transition">
+                        + 1ふん
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- フッター -->
+    <footer class="text-center text-xs text-emerald-800/60 font-bold py-1">
+        さんかくたべで ばランスよく たべようね
+    </footer>
+
+    <!-- JavaScript ロジック -->
+    <script>
+        // --- 状態管理 ---
+        let totalSeconds = 900; // 初期値: 15分 (900秒)
+        let remainingSeconds = 900;
+        let timerInterval = null;
+        let isRunning = false;
+        let soundEnabled = true;
+
+        // 円の周長: 2 * π * r (r = 142) = 約 892.2
+        const CIRCUMFERENCE = 2 * Math.PI * 142;
+
+        // --- DOM要素 ---
+        const timerDisplay = document.getElementById('timerDisplay');
+        const progressRingCircle = document.getElementById('progressRingCircle');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const owlContainer = document.getElementById('owlContainer');
+        const steamGroup = document.getElementById('steamGroup');
+        const statusBadge = document.getElementById('statusBadge');
+        const soundToggleBtn = document.getElementById('soundToggleBtn');
+        const soundIcon = document.getElementById('soundIcon');
+        const soundText = document.getElementById('soundText');
+        const presetBtns = document.querySelectorAll('.preset-btn');
+        const plusMinuteBtn = document.getElementById('plusMinute');
+        const minusMinuteBtn = document.getElementById('minusMinute');
+        const speechBubble = document.getElementById('speechBubble');
+
+        // 給食要素DOM
+        const riceAmount = document.getElementById('riceAmount');
+        const misoAmount = document.getElementById('misoAmount');
+        const meatAmount = document.getElementById('meatAmount');
+        const vegAmount = document.getElementById('vegAmount');
+        const milkLevel = document.getElementById('milkLevel');
+        const angryBrows = document.getElementById('angryBrows');
+        const sweatMarks = document.getElementById('sweatMarks');
+        const thanksEyes = document.getElementById('thanksEyes');
+
+        // 円形プログレスバーの初期設定
+        progressRingCircle.style.strokeDasharray = `${CIRCUMFERENCE}`;
+
+        // --- 給食の減り具合を更新 ---
+        function updateFoodAmount(fraction) {
+            // fraction: 1.0 (盛り付け満タン) -> 0.0 (完食)
+            
+            // 1. 白ご飯の量（縮小）
+            riceAmount.style.transform = `scale(${fraction})`;
+            riceAmount.style.transformOrigin = "80px 225px";
+            riceAmount.style.opacity = fraction > 0.05 ? "1" : "0";
+
+            // 2. お味噌汁の量（水位低下）
+            misoAmount.style.transform = `scale(${fraction})`;
+            misoAmount.style.transformOrigin = "208px 230px";
+            misoAmount.style.opacity = fraction > 0.05 ? "1" : "0";
+
+            // 3. お肉の量
+            meatAmount.style.transform = `scale(${fraction})`;
+            meatAmount.style.transformOrigin = "130px 224px";
+            meatAmount.style.opacity = fraction > 0.05 ? "1" : "0";
+
+            // 4. お野菜の量
+            vegAmount.style.transform = `scale(${fraction})`;
+            vegAmount.style.transformOrigin = "158px 223px";
+            vegAmount.style.opacity = fraction > 0.05 ? "1" : "0";
+
+            // 5. 牛乳の残量
+            const milkY = 230 - (22 * fraction);
+            milkLevel.setAttribute('d', `M 232 230 L 252 230 L ${232 + (17 * fraction)} ${milkY} L ${252 - (17 * fraction)} ${milkY} Z`);
+        }
+
+        // --- Web Audio API (効果音・チャイム) ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+        }
+
+        function playBeep(freq = 880, duration = 0.1) {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.log("Audio error", e);
+            }
+        }
+
+        function playFinishChime() {
+            if (!soundEnabled) return;
+            initAudio();
+            const notes = [
+                { f: 554.37, d: 0.8 }, // C#5
+                { f: 440.00, d: 0.8 }, // A4
+                { f: 493.88, d: 0.8 }, // B4
+                { f: 329.63, d: 1.2 }, // E4
+                { f: 0, d: 0.2 },
+                { f: 440.00, d: 0.8 }, // A4
+                { f: 493.88, d: 0.8 }, // B4
+                { f: 554.37, d: 0.8 }, // C#5
+                { f: 440.00, d: 1.5 }  // A4
+            ];
+
+            let currentTime = audioCtx.currentTime;
+            notes.forEach(note => {
+                if (note.f > 0) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(note.f, currentTime);
+                    gain.gain.setValueAtTime(0.15, currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, currentTime + note.d);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(currentTime);
+                    osc.stop(currentTime + note.d);
+                }
+                currentTime += note.d;
+            });
+        }
+
+        // --- アニメーション状態の設定 ---
+        function updateOwlAnimation() {
+            if (!isRunning) {
+                owlContainer.classList.remove('eating', 'eating-hurry');
+                steamGroup.classList.add('opacity-0');
+                angryBrows.classList.add('opacity-0');
+                sweatMarks.classList.add('opacity-0');
+                return;
+            }
+
+            // タイマー実行中は吹き出しとごちそうさまの目を隠す
+            speechBubble.classList.add('opacity-0', 'scale-75');
+            speechBubble.classList.remove('opacity-100', 'scale-100');
+            thanksEyes.classList.add('opacity-0');
+            owlContainer.classList.remove('thanks-wings');
+
+            steamGroup.classList.remove('opacity-0');
+
+            if (remainingSeconds <= 300) { // 残り5分以下：急ぎモーション＆焦り顔
+                owlContainer.classList.remove('eating');
+                owlContainer.classList.add('eating-hurry');
+                angryBrows.classList.remove('opacity-0');
+                sweatMarks.classList.remove('opacity-0');
+            } else { // 通常モーション
+                owlContainer.classList.remove('eating-hurry');
+                owlContainer.classList.add('eating');
+                angryBrows.classList.add('opacity-0');
+                sweatMarks.classList.add('opacity-0');
+            }
+        }
+
+        // --- 画面更新関数 ---
+        function updateDisplay() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            
+            // 時間表示 (00:00)
+            timerDisplay.textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            document.title = `(${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}) きゅうしょくタイマー`;
+
+            // 円形プログレスバーの計算
+            const fraction = totalSeconds > 0 ? (remainingSeconds / totalSeconds) : 0;
+            const offset = CIRCUMFERENCE * (1 - fraction);
+            progressRingCircle.style.strokeDashoffset = offset;
+
+            // 給食の盛り付け/減り具合を更新
+            updateFoodAmount(fraction);
+
+            // アニメーション更新
+            updateOwlAnimation();
+
+            // 残り時間による色とメッセージの変化
+            if (remainingSeconds <= 300 && remainingSeconds > 0) { // 残り5分以下
+                progressRingCircle.setAttribute('stroke', '#f59e0b'); // オレンジ色
+                timerDisplay.className = "text-4xl sm:text-5xl font-black tracking-tight text-amber-600 font-mono drop-shadow-md bg-white/90 backdrop-blur px-5 py-1 rounded-2xl border border-amber-200";
+                
+                if (isRunning) {
+                    statusBadge.textContent = "⚡ フクちゃん いそいで たべているよ！ ⚡";
+                    statusBadge.className = "bg-amber-100 border-2 border-amber-400 text-amber-900 font-bold text-base md:text-xl px-6 py-2 rounded-full shadow-sm text-center animate-bounce";
+                }
+            } else if (remainingSeconds > 300) {
+                progressRingCircle.setAttribute('stroke', '#10b981'); // エメラルドグリーン
+                timerDisplay.className = "text-4xl sm:text-5xl font-black tracking-tight text-slate-800 font-mono drop-shadow-md bg-white/90 backdrop-blur px-5 py-1 rounded-2xl border border-slate-200";
+                
+                if (isRunning) {
+                    statusBadge.textContent = "フクちゃんと ゆっくり たべよう";
+                    statusBadge.className = "bg-emerald-50 border-2 border-emerald-300 text-emerald-900 font-bold text-base md:text-xl px-6 py-2 rounded-full shadow-sm text-center";
+                }
+            }
+        }
+
+        // --- タイマー制御 ---
+        function startTimer() {
+            if (isRunning) return;
+            initAudio();
+            playBeep(1000, 0.1);
+
+            // ごちそうさま状態の解除
+            speechBubble.classList.add('opacity-0', 'scale-75');
+            speechBubble.classList.remove('opacity-100', 'scale-100');
+            thanksEyes.classList.add('opacity-0');
+            owlContainer.classList.remove('thanks-wings');
+
+            isRunning = true;
+            startBtn.classList.add('hidden');
+            pauseBtn.classList.remove('hidden');
+
+            updateDisplay();
+
+            timerInterval = setInterval(() => {
+                if (remainingSeconds > 0) {
+                    remainingSeconds--;
+                    updateDisplay();
+                } else {
+                    finishTimer();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            if (!isRunning) return;
+            playBeep(600, 0.1);
+
+            isRunning = false;
+            clearInterval(timerInterval);
+
+            startBtn.classList.remove('hidden');
+            pauseBtn.classList.add('hidden');
+
+            updateOwlAnimation();
+
+            statusBadge.textContent = "いったん きゅうけいちゅう";
+            statusBadge.className = "bg-slate-100 border-2 border-slate-300 text-slate-700 font-bold text-base md:text-xl px-6 py-2 rounded-full shadow-sm text-center";
+        }
+
+        function resetTimer() {
+            playBeep(500, 0.08);
+            pauseTimer();
+            remainingSeconds = totalSeconds;
+            
+            // ごちそうさまポーズ・吹き出し解除
+            speechBubble.classList.add('opacity-0', 'scale-75');
+            speechBubble.classList.remove('opacity-100', 'scale-100');
+            thanksEyes.classList.add('opacity-0');
+            owlContainer.classList.remove('thanks-wings');
+
+            // 給食を再び綺麗に盛り付け直す
+            updateDisplay();
+
+            statusBadge.textContent = "よく かんで おいしく たべようね！";
+            statusBadge.className = "bg-amber-50/90 border-2 border-amber-300/80 text-amber-900 font-bold text-base md:text-xl px-6 py-2 rounded-full shadow-sm text-center";
+        }
+
+        function finishTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+
+            startBtn.classList.remove('hidden');
+            pauseBtn.classList.add('hidden');
+
+            // タイマー停止・表情とポーズの切り替え（ごちそうさま）
+            owlContainer.classList.remove('eating', 'eating-hurry');
+            steamGroup.classList.add('opacity-0');
+            angryBrows.classList.add('opacity-0');
+            sweatMarks.classList.add('opacity-0');
+
+            // 目を瞑り、手を合わせる
+            thanksEyes.classList.remove('opacity-0');
+            owlContainer.classList.add('thanks-wings');
+
+            // 吹き出しアニメーション表示
+            speechBubble.classList.remove('opacity-0', 'scale-75');
+            speechBubble.classList.add('opacity-100', 'scale-100');
+
+            statusBadge.textContent = "🎉 ごちそうさまでした！ 🎉";
+            statusBadge.className = "bg-red-100 border-2 border-red-400 text-red-800 font-black text-lg md:text-2xl px-8 py-2 rounded-full shadow-lg animate-bounce text-center";
+
+            progressRingCircle.setAttribute('stroke', '#ef4444');
+            progressRingCircle.style.strokeDashoffset = `${CIRCUMFERENCE}`;
+
+            playFinishChime();
+        }
+
+        // --- イベントリスナー ---
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        resetBtn.addEventListener('click', resetTimer);
+
+        // プリセット時間ボタン
+        presetBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                presetBtns.forEach(b => {
+                    b.className = "preset-btn btn-bounce bg-slate-50 hover:bg-emerald-50 text-slate-700 font-bold py-2 rounded-xl border border-slate-200 text-sm";
+                });
+                btn.className = "preset-btn btn-bounce bg-emerald-50 text-emerald-800 font-black py-2 rounded-xl border-2 border-emerald-400 text-sm ring-2 ring-emerald-200";
+
+                const time = parseInt(btn.getAttribute('data-time'), 10);
+                totalSeconds = time;
+                resetTimer(); // 時間セットと同時にご飯が盛られます
+            });
+        });
+
+        // +/- 1分調整
+        plusMinuteBtn.addEventListener('click', () => {
+            totalSeconds += 60;
+            remainingSeconds += 60;
+            updateDisplay();
+            playBeep(700, 0.05);
+        });
+
+        minusMinuteBtn.addEventListener('click', () => {
+            if (remainingSeconds > 60 && totalSeconds > 60) {
+                totalSeconds -= 60;
+                remainingSeconds -= 60;
+                updateDisplay();
+                playBeep(400, 0.05);
+            }
+        });
+
+        // サウンドトグル
+        soundToggleBtn.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            if (soundEnabled) {
+                soundIcon.className = "fa-solid fa-volume-high text-lg";
+                soundText.textContent = "おと: オン";
+                soundToggleBtn.classList.remove('bg-slate-100', 'text-slate-500');
+                soundToggleBtn.classList.add('bg-emerald-50', 'text-emerald-800');
+                playBeep(880, 0.1);
+            } else {
+                soundIcon.className = "fa-solid fa-volume-xmark text-lg";
+                soundText.textContent = "おと: オフ";
+                soundToggleBtn.classList.remove('bg-emerald-50', 'text-emerald-800');
+                soundToggleBtn.classList.add('bg-slate-100', 'text-slate-500');
+            }
+        });
+
+        // 初期表示
+        updateDisplay();
+    </script>
+</body>
+</html>
